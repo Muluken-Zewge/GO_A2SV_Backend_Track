@@ -61,6 +61,7 @@ Enter the number corresponding to the action you wish to perform and press **Ent
 
 ## 📁 Project Structure
 
+```
 librarymanagement/
 ├── go.mod
 ├── main.go # Main entry point: initializes services and controllers
@@ -72,3 +73,4 @@ librarymanagement/
 │ └── member.go # Defines the Member struct
 └── services/
 └── library_service.go # Contains all business logic (Library struct, methods)
+```

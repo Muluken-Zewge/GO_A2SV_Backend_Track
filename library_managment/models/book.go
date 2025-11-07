@@ -6,3 +6,10 @@ type Book struct {
 	Author string
 	Status string
 }
+
+// ReservationRequest is the job we put on the queue
+type ReservationRequest struct {
+	BookID    int
+	MemberID  int
+	ReplyChan chan error
+}

@@ -74,3 +74,37 @@ librarymanagement/
 └── services/
 └── library_service.go # Contains all business logic (Library struct, methods)
 ```
+
+---
+
+## ⚡ Concurrency Implementation
+
+To handle multiple simultaneous reservation requests safely, the system uses a **Worker Pool** pattern combined with a **Mutex** for thread-safe state management.
+
+This design decouples the user's _request_ from the actual _processing_ of the reservation, ensuring the system remains responsive and free from race conditions.
+
+### 1. The Reservation Queue (Channels)
+
+- **What it is:** A global, buffered channel (`ReservationQueue`) is added to the `Library` struct.
+- **How it works:** When a user tries to reserve a book, the `ReserveBook` function does not perform the action. Instead, it creates a `ReservationRequest` job (a "ticket") and places it on this channel (the "queue").
+- **Analogy:** This is like a waiter (the `ReserveBook` function) putting an order on a ticket spike (the `ReservationQueue`) for the kitchen to handle.
+
+### 2. The Worker Pool (Goroutines)
+
+- **What it is:** At startup (`main.go`), the application launches several "worker" goroutines (`concurrency.StartWorkers`).
+- **How it works:** These workers run in the background and constantly watch the `ReservationQueue`. When a job appears, the first available worker grabs it and executes the _actual_ reservation logic (`DoReservation`).
+- **Analogy:** These are the chefs (the workers) who grab the tickets from the spike and cook the food (process the request).
+
+### 3. Preventing Race Conditions (Mutex)
+
+- **What it is:** A `sync.Mutex` is added to the `Library` struct.
+- **How it works:** The "worker" goroutines must **lock** the mutex _before_ they are allowed to read or write to the `Library.Books` or `Library.Members` maps. Once done, they **unlock** it.
+- **Why:** This ensures that only one worker can modify the library's state at any given moment, preventing two users from reserving the same book at the exact same time.
+- **Analogy:** This is the key to a single walk-in fridge. Only one chef (worker) can have the key at a time to get ingredients (access the maps).
+
+### 4. Asynchronous Auto-Cancellation (Goroutine + Timer)
+
+- **How it works:** After a worker successfully reserves a book, it launches _another_ new goroutine (`handleReservationTimeout`).
+- This new goroutine simply sleeps for 5 seconds (`time.Sleep`).
+- When it wakes up, it re-locks the mutex and checks if the book is _still_ "Reserved". If it is, it sets the status back to "Available".
+- This happens entirely in the background, allowing the user and the workers to continue processing other requests.

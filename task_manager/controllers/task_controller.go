@@ -25,7 +25,7 @@ func GetTaskById(c *gin.Context) {
 
 func CreatTask(c *gin.Context) {
 	var newTask models.Task
-	if err := c.ShouldBindJSON(newTask); err != nil {
+	if err := c.ShouldBindJSON(&newTask); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -41,7 +41,7 @@ func CreatTask(c *gin.Context) {
 func UpdateTask(c *gin.Context) {
 	id := c.Param("id")
 	var updatedTask models.Task
-	if err := c.ShouldBindJSON(updatedTask); err != nil {
+	if err := c.ShouldBindJSON(&updatedTask); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

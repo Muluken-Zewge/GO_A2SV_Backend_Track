@@ -64,7 +64,7 @@ func UpdateTask(id string, updatedTask models.Task) (models.Task, error) {
 func DeleteTask(id string) error {
 	for i, task := range tasks {
 		if id == task.ID {
-			tasks = append(tasks[:1], tasks[i+1:]...)
+			tasks = append(tasks[:i], tasks[i+1:]...)
 			return nil
 		}
 	}

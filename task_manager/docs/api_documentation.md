@@ -27,14 +27,14 @@ The primary resource object handled by the API has the following structure:
 
 **Example `Task` Object:**
 
-`````json
+````json
 {
     "ID": "1",
     "Title": "Finish API documentation",
     "Description": "Write the complete documentation for all endpoints.",
     "DueDate": "2025-11-12T14:30:00Z",
     "Status": "in-progress"
-}
+}```
 
 ## 4. Endpoints
 ### 4.1. Get All Tasks
@@ -46,7 +46,7 @@ Retrieves a list of all tasks.
 | **Path** | `/tasks` |
 
 Success Response (200 OK):
-````json
+```json
 {
     "tasks": [
         {
@@ -57,7 +57,8 @@ Success Response (200 OK):
             "Status": "in-progress"
         }
     ]
-}
+}```
+
 ### 4.2. Create a New Task
 Creates a new task.
 
@@ -68,15 +69,16 @@ Creates a new task.
 
 Request Body (Required Fields: Title, Description, Status):
 
-````json
+```json
 {
     "Title": "Deploy to production",
     "Status": "pending",
     "Description": "Push the final code to the server."
-}
+}```
+
 Success Response (201 Created):
 
-````json
+```json
 {
     "message": "Task created successfully",
     "task": {
@@ -86,13 +88,14 @@ Success Response (201 Created):
         "DueDate": "2025-11-12T15:01:59Z",
         "Status": "pending"
     }
-}
+}```
+
 Error Response (400 Bad Request):
 
-````json
+```json
 {
     "error": "title and status are required fields"
-}
+}```
 
 ### 4.3. Get a Single Task
 Retrieves a single task by its unique ID.
@@ -104,21 +107,21 @@ Retrieves a single task by its unique ID.
 
 Success Response (200 OK):
 
-````json
+```json
 {
     "ID": "2",
     "Title": "Test the API",
     "Description": "Use Postman to test all endpoints.",
     "DueDate": "2025-11-13T10:00:00Z",
     "Status": "pending"
-}
+}```
 
 Error Response (404 Not Found):
 
-````json
+```json
 {
     "error": "task not found"
-}
+}```
 
 ### 4.4. Update a Task
 Updates an existing task. Only the fields provided in the JSON body will be updated. All fields are optional.
@@ -130,14 +133,14 @@ Updates an existing task. Only the fields provided in the JSON body will be upda
 
 Request Body (All fields optional for update):
 
-````json
+```json
 {
     "Status": "completed",
     "Description": "All endpoints tested and working."
-}
+}```
 
 Success Response (200 OK):
-````json
+```json
 {
     "message": "Task updated successfully",
     "Updated Task": {
@@ -147,13 +150,14 @@ Success Response (200 OK):
         "DueDate": "2025-11-13T10:00:00Z",
         "Status": "completed"
     }
-}
+}```
 Error Response (404 Not Found):
 
-````json
+```json
 {
     "error": "task not found"
-}
+}```
+
 ### 4.5. Delete a Task
 Deletes a task by its unique ID.
 
@@ -164,15 +168,16 @@ Deletes a task by its unique ID.
 
 Success Response (200 OK):
 
-````json
+```json
 {
     "message": "Task deleted"
-}
+}```
 
 Error Response (404 Not Found):
 
-````json
+```json
 {
     "error": "task not found"
-}
-`````
+}```
+
+````

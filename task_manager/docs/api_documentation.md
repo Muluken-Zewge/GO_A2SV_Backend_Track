@@ -21,13 +21,13 @@ The primary resource object handled by the API has the following structure:
 | :------------ | :------- | :---------------------------------------------------------------- | :----------------------------- |
 | `ID`          | `string` | The unique identifier for the task (server-generated).            | No                             |
 | `Title`       | `string` | The name or title of the task.                                    | **Yes**                        |
-| `Description` | `string` | A detailed description of the task.                               | No                             |
+| `Description` | `string` | A detailed description of the task.                               | **YES**                        |
 | `DueDate`     | `string` | The date the task is due (ISO-8601/RFC3339 format).               | No (defaults to creation time) |
 | `Status`      | `string` | The current status (e.g., "pending", "in-progress", "completed"). | **Yes**                        |
 
 **Example `Task` Object:**
 
-````json
+`````json
 {
     "ID": "1",
     "Title": "Finish API documentation",
@@ -46,7 +46,7 @@ Retrieves a list of all tasks.
 | **Path** | `/tasks` |
 
 Success Response (200 OK):
-```json
+````json
 {
     "tasks": [
         {
@@ -68,7 +68,7 @@ Creates a new task.
 
 Request Body (Required Fields: Title, Description, Status):
 
-```json
+````json
 {
     "Title": "Deploy to production",
     "Status": "pending",
@@ -76,7 +76,7 @@ Request Body (Required Fields: Title, Description, Status):
 }
 Success Response (201 Created):
 
-```json
+````json
 {
     "message": "Task created successfully",
     "task": {
@@ -89,7 +89,7 @@ Success Response (201 Created):
 }
 Error Response (400 Bad Request):
 
-```json
+````json
 {
     "error": "title and status are required fields"
 }
@@ -104,7 +104,7 @@ Retrieves a single task by its unique ID.
 
 Success Response (200 OK):
 
-```json
+````json
 {
     "ID": "2",
     "Title": "Test the API",
@@ -115,7 +115,7 @@ Success Response (200 OK):
 
 Error Response (404 Not Found):
 
-```json
+````json
 {
     "error": "task not found"
 }
@@ -130,14 +130,14 @@ Updates an existing task. Only the fields provided in the JSON body will be upda
 
 Request Body (All fields optional for update):
 
-```json
+````json
 {
     "Status": "completed",
     "Description": "All endpoints tested and working."
 }
 
 Success Response (200 OK):
-```json
+````json
 {
     "message": "Task updated successfully",
     "Updated Task": {
@@ -150,7 +150,7 @@ Success Response (200 OK):
 }
 Error Response (404 Not Found):
 
-```json
+````json
 {
     "error": "task not found"
 }
@@ -164,15 +164,15 @@ Deletes a task by its unique ID.
 
 Success Response (200 OK):
 
-```json
+````json
 {
     "message": "Task deleted"
 }
 
 Error Response (404 Not Found):
 
-```json
+````json
 {
     "error": "task not found"
 }
-````
+`````

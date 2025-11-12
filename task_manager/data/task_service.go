@@ -1,46 +1,46 @@
 package data
 
 import (
-	"net/http"
+	"errors"
 	"strconv"
 	"time"
 
 	"taskmanager/models"
-
-	"github.com/gin-gonic/gin"
 )
 
 var tasks = []models.Task{}
-var taskId = 1
+var nextID = 1
 
-func getTasks(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"tasks": tasks})
+func GetAllTasks() []models.Task {
+	return tasks
 }
 
-func getTaskById(c *gin.Context) {
-	id := c.Param("id")
+func GetTaskById(id string) (models.Task, error) {
 	for _, task := range tasks {
 		if id == task.ID {
-			c.JSON(http.StatusOK, task)
-			return
+			return task, nil
 		}
 	}
-
-	c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+	return models.Task{}, errors.New("TASK DOESN'T EXIST")
 }
 
-func updateTask(c *gin.Context) {
-	id := c.Param("id")
-	var updatedTask models.Task
+func CreateTask(newTask models.Task) models.Task {
+	newTask.ID = strconv.Itoa(nextID)
+	nextID++ // increment for next task
 
-	if err := c.ShouldBindJSON(&updatedTask); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// check if duedate is not set
+	if newTask.DueDate.IsZero() {
+		newTask.DueDate = time.Now()
 	}
 
+	tasks = append(tasks, newTask)
+
+	return newTask
+}
+
+func UpdateTask(id string, updatedTask models.Task) (models.Task, error) {
 	for i, task := range tasks {
 		if id == task.ID {
-			// update only specified feilds
 			if updatedTask.Title != "" {
 				tasks[i].Title = updatedTask.Title
 			}
@@ -53,46 +53,20 @@ func updateTask(c *gin.Context) {
 			if updatedTask.Status != "" {
 				tasks[i].Status = updatedTask.Status
 			}
-
-			c.JSON(http.StatusOK, gin.H{"message": "Task updated successfully", "Updated Task": task})
-			return
+			return tasks[i], nil
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+
+	return models.Task{}, errors.New("TASK NOT FOUND")
 
 }
 
-func deleteTask(c *gin.Context) {
-	id := c.Param("id")
+func DeleteTask(id string) error {
 	for i, task := range tasks {
 		if id == task.ID {
-			tasks = append(tasks[:i], tasks[i+1:]...)
-			c.JSON(http.StatusOK, gin.H{"message": "Task deleted"})
-			return
+			tasks = append(tasks[:1], tasks[i+1:]...)
+			return nil
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
-}
-
-func createTask(c *gin.Context) {
-	var newTask models.Task
-
-	if err := c.ShouldBindJSON(&newTask); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if newTask.Title == "" || newTask.Description == "" || newTask.Status == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "title, description, and status are required fields"})
-		return
-	}
-
-	newTask.ID = strconv.Itoa(taskId)
-	newTask.DueDate = time.Now()
-	taskId++ // increment for next task
-
-	tasks = append(tasks, newTask)
-
-	c.JSON(http.StatusCreated, gin.H{"message": "Task created successfully", "task": newTask})
-
+	return errors.New("TASK NOT FOUND")
 }

@@ -31,7 +31,7 @@ func NewTaskService(connectionString string, dbName string, collectionName strin
 	// connect to MongoDB
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		return nil, fmt.Errorf("FAILED to connect to MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
 	// ping the database to verify the connection
@@ -53,7 +53,6 @@ func NewTaskService(connectionString string, dbName string, collectionName strin
 
 }
 
-// var tasks = []models.Task{}
 var nextID = 1
 
 func (t *TaskService) GetAllTasks() ([]models.Task, error) {
@@ -62,7 +61,7 @@ func (t *TaskService) GetAllTasks() ([]models.Task, error) {
 
 	cursor, err := t.collection.Find(ctx, primitive.D{})
 	if err != nil {
-		return nil, fmt.Errorf("FAILED to find tasks: %w", err)
+		return nil, fmt.Errorf("failed to find tasks: %w", err)
 	}
 	defer cursor.Close(ctx) // close the cursor
 
@@ -88,7 +87,7 @@ func (t *TaskService) GetTaskById(id string) (models.Task, error) {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.Task{}, errors.New("task not found")
 		}
-		return models.Task{}, fmt.Errorf("FAILED retrieve task: %w", err)
+		return models.Task{}, fmt.Errorf("failed to retrieve task: %w", err)
 	}
 
 	return task, nil
@@ -108,7 +107,7 @@ func (t *TaskService) CreateTask(newTask models.Task) (models.Task, error) {
 
 	_, err := t.collection.InsertOne(ctx, newTask)
 	if err != nil {
-		return models.Task{}, fmt.Errorf("FAILED to create task: %w", err)
+		return models.Task{}, fmt.Errorf("failed to create task: %w", err)
 	}
 
 	return newTask, nil
@@ -151,9 +150,9 @@ func (t *TaskService) UpdateTask(id string, updatedTask models.Task) (models.Tas
 	err := t.collection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&task)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return models.Task{}, errors.New("TASK not found")
+			return models.Task{}, errors.New("task not found")
 		}
-		return models.Task{}, fmt.Errorf("FAILED to update task: %w", err)
+		return models.Task{}, fmt.Errorf("failed to update task: %w", err)
 	}
 
 	return task, nil
@@ -166,7 +165,7 @@ func (t *TaskService) DeleteTask(id string) error {
 	filter := bson.M{"task_id": id}
 	result, err := t.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("FAILED to delete task: %w", err)
+		return fmt.Errorf("failed to delete task: %w", err)
 	}
 
 	if result.DeletedCount == 0 {

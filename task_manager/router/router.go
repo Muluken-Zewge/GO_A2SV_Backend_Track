@@ -2,11 +2,16 @@ package router
 
 import (
 	"taskmanager/controllers"
+	"taskmanager/data"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(ts *data.TaskService) *gin.Engine {
+	// itialize task controller
+	taskController := controllers.NewTaskController(ts)
+
+	// intialize the router
 	router := gin.Default()
 
 	// group routes under /api/v1
@@ -15,11 +20,11 @@ func SetupRouter() *gin.Engine {
 	// task routes
 	taskRoutes := api.Group("/tasks")
 
-	taskRoutes.GET("", controllers.GetTasks)
-	taskRoutes.POST("", controllers.CreatTask)
-	taskRoutes.GET("/:id", controllers.GetTaskById)
-	taskRoutes.PUT("/:id", controllers.UpdateTask)
-	taskRoutes.DELETE("/:id", controllers.DeleteTask)
+	taskRoutes.GET("", taskController.GetTasks)
+	taskRoutes.POST("", taskController.CreatTask)
+	taskRoutes.GET("/:id", taskController.GetTaskById)
+	taskRoutes.PUT("/:id", taskController.UpdateTask)
+	taskRoutes.DELETE("/:id", taskController.DeleteTask)
 
 	return router
 }

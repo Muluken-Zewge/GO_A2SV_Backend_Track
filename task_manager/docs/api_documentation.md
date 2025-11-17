@@ -9,21 +9,23 @@ All API endpoints are relative to the following base path.
 - **Base API Path:** `/api/v1`
 - **Full Local URL Example:** `http://localhost:8080/api/v1`
 
+**Database:** MongoDB Atlas (Non-relational document store)
+
 ## 2. Authentication
 
 This API is open and does not require authentication.
 
 ## 3. Data Model: `Task` Object
 
-The primary resource object handled by the API has the following structure:
+The primary resource object handled by the API has the following structure. Note that the **public `ID` field** is a custom identifier used for all API operations, separate from MongoDB's internal `_id`.
 
-| Field         | Type     | Description                                                       | Required on Create?            |
-| :------------ | :------- | :---------------------------------------------------------------- | :----------------------------- |
-| `ID`          | `string` | The unique identifier for the task (server-generated).            | No                             |
-| `Title`       | `string` | The name or title of the task.                                    | **Yes**                        |
-| `Description` | `string` | A detailed description of the task.                               | **YES**                        |
-| `DueDate`     | `string` | The date the task is due (ISO-8601/RFC3339 format).               | No (defaults to creation time) |
-| `Status`      | `string` | The current status (e.g., "pending", "in-progress", "completed"). | **Yes**                        |
+| Field         | Type     | Description                                                                                | Required on Create?            |
+| :------------ | :------- | :----------------------------------------------------------------------------------------- | :----------------------------- | --- |
+| **`ID`**      | `string` | The **unique identifier** for the task (server-generated custom ID, used for all lookups). | No                             |
+| `Title`       | `string` | The name or title of the task.                                                             | **Yes**                        |
+| `Description` | `string` | A detailed description of the task.                                                        | **Yes**                        |
+| `DueDate`     | `string` | The date the task is due (ISO-8601/RFC3339 format).                                        | No (defaults to creation time) |
+| `Status`      | `string` | The current status (e.g., "pending", "in-progress", "completed").                          | **Yes**                        |     |
 
 **Example `Task` Object:**
 
@@ -102,7 +104,7 @@ Error Response (400 Bad Request):
 
 ```json
 {
-  "error": "title and status are required fields"
+  "error": "title, description and status are required fields"
 }
 ```
 

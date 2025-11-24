@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 	"taskmanager/data"
 	"taskmanager/models"
 
 	"github.com/gin-gonic/gin"
 )
+
+// --- TASK CONTROLLER ---
 
 type TaskController struct {
 	Service *data.TaskService
@@ -95,4 +98,71 @@ func (t *TaskController) DeleteTask(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted successfully"})
+}
+
+// --- USER CONTROLLER ---
+
+type UserController struct {
+	service *data.UserService
+}
+
+func NewUserController(us *data.UserService) *UserController {
+	return &UserController{
+		service: us,
+	}
+}
+
+func (u *UserController) RegisterUser(c *gin.Context) {
+	// read and bind request body to user variable
+	var newUser models.User
+	if err := c.ShouldBindJSON(&newUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// call the appropriate service function
+	_, err := u.service.RegisterUser(newUser)
+	if err != nil {
+		errorMessage := err.Error()
+
+		//Check for expected client-side validation errors
+		if strings.Contains(errorMessage, "Password should be at least") || strings.Contains(errorMessage, "User name already exist") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+			return
+		}
+
+		// Default to 500 for actual server/database errors
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user due to a server error"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
+}
+
+func (u *UserController) AuthenticateUser(c *gin.Context) {
+	// read and bind request body to user variable
+	var existingUser models.User
+	if err := c.ShouldBindJSON(&existingUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// call the appropriate service function
+	token, err := u.service.AuthenticateUser(existingUser)
+	if err != nil {
+		errorMessage := err.Error()
+
+		// Check for invalid credentials (User's fault)
+		if strings.Contains(errorMessage, "invalid credential") {
+			// Authentication failed -> 401 Unauthorized
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+			return
+		}
+
+		// Default to 500 for actual server/database errors
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication failed due to a server issue"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token, "message": "Login successfully"})
 }

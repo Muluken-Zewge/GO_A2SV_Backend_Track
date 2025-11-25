@@ -134,3 +134,29 @@ func (us *UserService) AuthenticateUser(user models.User) (string, error) {
 
 	return jwtToken, nil
 }
+
+func (us *UserService) PromoteUser(userId string) (models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// prepare query components
+	filter := bson.M{"user_id": userId}
+
+	updateData := bson.M{}
+	updateData["role"] = models.RoleAdmin
+
+	updateQuery := bson.M{"$set": updateData}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	// execute database command
+	var user models.User
+	err := us.userCollection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return models.User{}, errors.New("user not found")
+		}
+		return models.User{}, fmt.Errorf("failed to update user status: %w", err)
+	}
+
+	return user, nil
+}

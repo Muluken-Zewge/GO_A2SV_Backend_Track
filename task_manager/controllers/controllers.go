@@ -166,3 +166,20 @@ func (u *UserController) AuthenticateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": token, "message": "Login successfully"})
 }
+
+func (u *UserController) PromoteUser(c *gin.Context) {
+	id := c.Param("id")
+	user, err := u.service.PromoteUser(id)
+	if err != nil {
+		errorMessage := err.Error()
+		if strings.Contains(errorMessage, "user not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user status updated successfully", "updatedUser": user})
+
+}

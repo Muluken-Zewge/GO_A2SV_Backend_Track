@@ -46,6 +46,7 @@ func SetupRouter(ts *data.TaskService, us *data.UserService) *gin.Engine {
 
 	userRoutes.POST("/register", userController.RegisterUser)
 	userRoutes.POST("/login", userController.AuthenticateUser)
+	userRoutes.PATCH("/:id/promote", middleware.AuthMiddleware(jwtSecret), middleware.AuthorizationMiddleware(models.RoleAdmin), userController.PromoteUser)
 
 	return router
 }

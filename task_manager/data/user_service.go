@@ -81,7 +81,7 @@ func (us *UserService) RegisterUser(userCredential models.Credentials) (models.U
 	if count == 0 {
 		newUser.Role = models.RoleAdmin
 	} else {
-		newUser.Role = models.RoleAdmin
+		newUser.Role = models.RoleUser
 	}
 
 	// make the db call

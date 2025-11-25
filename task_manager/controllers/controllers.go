@@ -121,12 +121,12 @@ func (u *UserController) RegisterUser(c *gin.Context) {
 	}
 
 	// call the appropriate service function
-	_, err := u.service.RegisterUser(newUser)
+	registeredUser, err := u.service.RegisterUser(newUser)
 	if err != nil {
 		errorMessage := err.Error()
 
 		//Check for expected client-side validation errors
-		if strings.Contains(errorMessage, "Password should be at least") || strings.Contains(errorMessage, "User name already exist") {
+		if strings.Contains(errorMessage, "password should be at least") || strings.Contains(errorMessage, "User name already exist") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 			return
 		}
@@ -136,7 +136,7 @@ func (u *UserController) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully", "user": registeredUser})
 }
 
 func (u *UserController) AuthenticateUser(c *gin.Context) {

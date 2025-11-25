@@ -126,7 +126,7 @@ func (u *UserController) RegisterUser(c *gin.Context) {
 		errorMessage := err.Error()
 
 		//Check for expected client-side validation errors
-		if strings.Contains(errorMessage, "password should be at least") || strings.Contains(errorMessage, "User name already exist") {
+		if strings.Contains(errorMessage, "password should be at least") || strings.Contains(errorMessage, "user name already exist") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 			return
 		}

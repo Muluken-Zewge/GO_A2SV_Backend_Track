@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"taskmanager/data"
 	"taskmanager/router"
+	"time"
 
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -18,7 +22,8 @@ func main() {
 	// Retrieve all necessary configuration from environment variables
 	mongoURI := os.Getenv("MONGO_URI")
 	dbName := os.Getenv("MONGO_DB_NAME")
-	collectionName := os.Getenv("MONGO_COLLECTION_NAME")
+	taskCollectionName := os.Getenv("MONGO_TASK_COLLECTION")
+	userCollectionName := os.Getenv("MONGO_USER_COLLECTION")
 
 	// Critical Validation: Ensure the URI is set
 	if mongoURI == "" {
@@ -30,17 +35,55 @@ func main() {
 		dbName = "task_db"
 		log.Println("Using default database name: task_db")
 	}
-	if collectionName == "" {
-		collectionName = "tasks"
-		log.Println("Using default collection name: tasks")
+	if taskCollectionName == "" {
+		taskCollectionName = "tasks"
+		log.Println("Using default task collection name: tasks")
 	}
 
-	// intialize task service
-	taskService, err := data.NewTaskService(mongoURI, dbName, collectionName)
-	if err != nil {
-		log.Fatalf("Service initialization failed: %v", err)
+	if userCollectionName == "" {
+		userCollectionName = "users"
+		log.Println("Using default user collection name: users")
 	}
-	r := router.SetupRouter(taskService)
+
+	/// ---CREAT MONGODB CONNECTION ---
+
+	// set up a context for connection timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel() // cancel the context when the function returns
+
+	// set client options
+	clientOptions := options.Client().ApplyURI(mongoURI)
+
+	// connect to MongoDB
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		log.Fatal("FATAL: unable to connect to database")
+	}
+
+	// Ensure the client is closed when main() exits or panics
+	defer func() {
+		if err := client.Disconnect(context.Background()); err != nil {
+			log.Fatalf("FATAL: Error disconnecting MongoDB client: %v", err)
+		}
+	}()
+
+	// Ping the primary database to verify connection and credentials
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		// Close the client gracefully if the ping fails
+		client.Disconnect(context.Background())
+		log.Fatalf("FATAL: Failed to ping MongoDB: %v", err)
+	}
+
+	log.Println("Successfully connected to MongoDB Atlas.")
+
+	// intialize task service
+	taskService := data.NewTaskService(client, dbName, taskCollectionName)
+
+	// intialize user service
+	userService := data.NewUserService(client, dbName, userCollectionName)
+
+	r := router.SetupRouter(taskService, userService)
 
 	log.Println("Server starting on port 8080...")
 

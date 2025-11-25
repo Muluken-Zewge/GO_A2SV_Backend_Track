@@ -17,40 +17,15 @@ import (
 
 // TaskService holds the MongoDB connection and collection handle.
 type TaskService struct {
-	collection *mongo.Collection
+	taskCollection *mongo.Collection
 }
 
-func NewTaskService(connectionString string, dbName string, collectionName string) (*TaskService, error) {
-	// set up a context for connection timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel() // cancel the context when the function returns
-
-	// set client options
-	clientOptions := options.Client().ApplyURI(connectionString)
-
-	// connect to MongoDB
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
-	}
-
-	// ping the database to verify the connection
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		// Close the client if the ping fails
-		client.Disconnect(context.Background())
-		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
-	}
-
-	fmt.Println("Successfully connected to MongoDB!")
-
-	// get the collection handle
+func NewTaskService(client *mongo.Client, dbName string, collectionName string) *TaskService {
 	collection := client.Database(dbName).Collection(collectionName)
 
 	return &TaskService{
-		collection: collection,
-	}, nil
-
+		taskCollection: collection,
+	}
 }
 
 var nextID = 1
@@ -59,7 +34,7 @@ func (t *TaskService) GetAllTasks() ([]models.Task, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := t.collection.Find(ctx, primitive.D{})
+	cursor, err := t.taskCollection.Find(ctx, primitive.D{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find tasks: %w", err)
 	}
@@ -82,7 +57,7 @@ func (t *TaskService) GetTaskById(id string) (models.Task, error) {
 	var task models.Task
 
 	filter := bson.M{"task_id": id}
-	err := t.collection.FindOne(ctx, filter).Decode(&task)
+	err := t.taskCollection.FindOne(ctx, filter).Decode(&task)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.Task{}, errors.New("task not found")
@@ -105,7 +80,7 @@ func (t *TaskService) CreateTask(newTask models.Task) (models.Task, error) {
 		newTask.DueDate = time.Now()
 	}
 
-	_, err := t.collection.InsertOne(ctx, newTask)
+	_, err := t.taskCollection.InsertOne(ctx, newTask)
 	if err != nil {
 		return models.Task{}, fmt.Errorf("failed to create task: %w", err)
 	}
@@ -147,7 +122,7 @@ func (t *TaskService) UpdateTask(id string, updatedTask models.Task) (models.Tas
 
 	var task models.Task
 
-	err := t.collection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&task)
+	err := t.taskCollection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&task)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.Task{}, errors.New("task not found")
@@ -163,7 +138,7 @@ func (t *TaskService) DeleteTask(id string) error {
 	defer cancel()
 
 	filter := bson.M{"task_id": id}
-	result, err := t.collection.DeleteOne(ctx, filter)
+	result, err := t.taskCollection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete task: %w", err)
 	}

@@ -114,14 +114,14 @@ func NewUserController(us *data.UserService) *UserController {
 
 func (u *UserController) RegisterUser(c *gin.Context) {
 	// read and bind request body to user variable
-	var newUser models.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
+	var userCredential models.Credentials
+	if err := c.ShouldBindJSON(&userCredential); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// call the appropriate service function
-	registeredUser, err := u.service.RegisterUser(newUser)
+	registeredUser, err := u.service.RegisterUser(userCredential)
 	if err != nil {
 		errorMessage := err.Error()
 
@@ -141,14 +141,14 @@ func (u *UserController) RegisterUser(c *gin.Context) {
 
 func (u *UserController) AuthenticateUser(c *gin.Context) {
 	// read and bind request body to user variable
-	var existingUser models.User
-	if err := c.ShouldBindJSON(&existingUser); err != nil {
+	var userCredential models.Credentials
+	if err := c.ShouldBindJSON(&userCredential); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// call the appropriate service function
-	token, err := u.service.AuthenticateUser(existingUser)
+	token, err := u.service.AuthenticateUser(userCredential)
 	if err != nil {
 		errorMessage := err.Error()
 

@@ -29,16 +29,19 @@ func NewUserService(client *mongo.Client, dbName string, collectionName string) 
 	}
 }
 
-func (us *UserService) RegisterUser(user models.User) (models.User, error) {
+func (us *UserService) RegisterUser(userCredential models.Credentials) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// define the database user struct
+	var newUser models.User
+
 	// validate the password
-	if len(user.Password) < 4 {
+	if len(userCredential.Password) < 4 {
 		return models.User{}, errors.New("password should be at least 4 characters")
 	}
 	// check if the user name is unique(doesn't exist in the collection)
-	filter := bson.M{"user_name": user.UserName}
+	filter := bson.M{"user_name": userCredential.UserName}
 
 	// a variable to store the result
 	var existingUser struct{}
@@ -55,17 +58,20 @@ func (us *UserService) RegisterUser(user models.User) (models.User, error) {
 		return models.User{}, fmt.Errorf("error checking username uniqueness: %w", err)
 	}
 
-	// hash the password and assign
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	// assign username to database user
+	newUser.UserName = userCredential.UserName
+
+	// hash the password and assign to database user
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userCredential.Password), bcrypt.DefaultCost)
 
 	if err != nil {
 		return models.User{}, fmt.Errorf("failed to hash password: %w", err)
 	}
-	user.Password = string(hashedPassword)
+	newUser.HashedPassword = string(hashedPassword)
 
 	// assign user id(uuid)
 	var newID = uuid.New()
-	user.ID = newID
+	newUser.ID = newID
 
 	//if there's no user, assign the first user admin role and the next ones just user
 	count, err := us.userCollection.CountDocuments(ctx, bson.D{})
@@ -73,26 +79,26 @@ func (us *UserService) RegisterUser(user models.User) (models.User, error) {
 		return models.User{}, fmt.Errorf("error checking collection count: %w", err)
 	}
 	if count == 0 {
-		user.Role = models.RoleAdmin
+		newUser.Role = models.RoleAdmin
 	} else {
-		user.Role = models.RoleAdmin
+		newUser.Role = models.RoleAdmin
 	}
 
 	// make the db call
-	_, err = us.userCollection.InsertOne(ctx, user)
+	_, err = us.userCollection.InsertOne(ctx, newUser)
 	if err != nil {
 		return models.User{}, fmt.Errorf("error registering user: %w", err)
 	}
 
-	return user, nil
+	return newUser, nil
 }
 
-func (us *UserService) AuthenticateUser(user models.User) (string, error) {
+func (us *UserService) AuthenticateUser(userCredential models.Credentials) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// check if the user name exists
-	filter := bson.M{"user_name": user.UserName}
+	filter := bson.M{"user_name": userCredential.UserName}
 
 	var existingUser struct {
 		SavedPassword string          `bson:"password"`
@@ -111,7 +117,7 @@ func (us *UserService) AuthenticateUser(user models.User) (string, error) {
 	}
 
 	// check if password is correct
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.SavedPassword), []byte(user.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(existingUser.SavedPassword), []byte(userCredential.Password))
 	if err != nil {
 		return "", errors.New("invalid credential")
 	}
@@ -121,7 +127,7 @@ func (us *UserService) AuthenticateUser(user models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":   existingUser.UserId,
-		"user_name": user.UserName,
+		"user_name": userCredential.UserName,
 		"role":      existingUser.Role,
 		"exp":       time.Now().Add(time.Hour * 24).Unix(),
 	})

@@ -101,12 +101,12 @@ func (us *UserService) AuthenticateUser(userCredential models.Credentials) (stri
 	filter := bson.M{"user_name": userCredential.UserName}
 
 	var existingUser struct {
-		SavedPassword string          `bson:"password"`
+		SavedPassword string          `bson:"hashed_password"`
 		UserId        uuid.UUID       `bson:"user_id"`
 		Role          models.UserRole `bson:"role"`
 	}
 
-	options := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 1}, {Key: "password", Value: 1}, {Key: "role", Value: 1}})
+	options := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 1}, {Key: "hashed_password", Value: 1}, {Key: "role", Value: 1}})
 
 	err := us.userCollection.FindOne(ctx, filter, options).Decode(&existingUser)
 	if err != nil {

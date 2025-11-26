@@ -106,7 +106,7 @@ func (us *UserService) AuthenticateUser(userCredential models.Credentials) (stri
 		Role          models.UserRole `bson:"role"`
 	}
 
-	options := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 1}, {Key: "password", Value: 1}})
+	options := options.FindOne().SetProjection(bson.D{{Key: "user_id", Value: 1}, {Key: "password", Value: 1}, {Key: "role", Value: 1}})
 
 	err := us.userCollection.FindOne(ctx, filter, options).Decode(&existingUser)
 	if err != nil {

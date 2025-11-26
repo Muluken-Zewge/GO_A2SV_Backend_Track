@@ -133,7 +133,7 @@ func (us *UserService) AuthenticateUser(userCredential models.Credentials) (stri
 	})
 
 	// sign the token with the secret key
-	jwtToken, err := token.SignedString(jwtSecret)
+	jwtToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", fmt.Errorf("error signing token: %w", err)
 	}

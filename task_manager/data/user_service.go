@@ -146,7 +146,11 @@ func (us *UserService) PromoteUser(userId string) (models.User, error) {
 	defer cancel()
 
 	// prepare query components
-	filter := bson.M{"user_id": userId}
+	parsedUUID, err := uuid.Parse(userId)
+	if err != nil {
+		return models.User{}, fmt.Errorf("failed to parse string id to uuid type")
+	}
+	filter := bson.M{"user_id": parsedUUID}
 
 	updateData := bson.M{}
 	updateData["role"] = models.RoleAdmin
@@ -156,7 +160,7 @@ func (us *UserService) PromoteUser(userId string) (models.User, error) {
 
 	// execute database command
 	var user models.User
-	err := us.userCollection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&user)
+	err = us.userCollection.FindOneAndUpdate(ctx, filter, updateQuery, opts).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.User{}, errors.New("user not found")

@@ -54,13 +54,13 @@ This API requires a valid JSON Web Token (JWT) for access to most endpoints. Acc
 
 The primary resource object handled by the API has the following structure. Note that the **public `ID` field** is a custom identifier used for all API operations, separate from MongoDB's internal `_id`.
 
-| Field         | Type     | Description                                                                                | Required on Create?            |
-| :------------ | :------- | :----------------------------------------------------------------------------------------- | :----------------------------- | --- |
-| **`ID`**      | `string` | The **unique identifier** for the task (server-generated custom ID, used for all lookups). | No                             |
-| `Title`       | `string` | The name or title of the task.                                                             | **Yes**                        |
-| `Description` | `string` | A detailed description of the task.                                                        | **Yes**                        |
-| `DueDate`     | `string` | The date the task is due (ISO-8601/RFC3339 format).                                        | No (defaults to creation time) |
-| `Status`      | `string` | The current status (e.g., "pending", "in-progress", "completed").                          | **Yes**                        |     |
+| Field       | Type   | Description                                         | Required on Create? |
+| :---------- | :----- | :-------------------------------------------------- | :------------------ |
+| ID          | string | The unique identifier for the task.                 | No                  |
+| Title       | string | The name or title of the task.                      | Yes                 |
+| Description | string | A detailed description of the task.                 | Yes                 |
+| Due Date    | string | The date the task is due (ISO-8601/RFC3339 format). | No                  |
+| Status      | string | The current status (e.g., "pending", "completed").  | Yes                 |
 
 **Example `Task` Object:**
 

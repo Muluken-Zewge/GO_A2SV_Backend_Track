@@ -1,6 +1,6 @@
 # Task Manager API Documentation
 
-A simple API for creating, reading, updating, and deleting tasks.
+A simple API for creating, reading, updating, and deleting tasks, secured with JWT-based authentication and role-based authorization.
 
 ## 1. Overview and Base URL
 
@@ -11,11 +11,46 @@ All API endpoints are relative to the following base path.
 
 **Database:** MongoDB Atlas (Non-relational document store)
 
-## 2. Authentication
+## 2. Authentication and Authorization (Security)🔐
 
-This API is open and does not require authentication.
+This API requires a valid JSON Web Token (JWT) for access to most endpoints. Access is further restricted based on the user's role.
 
-## 3. Data Model: `Task` Object
+### 2.1. User Roles
+
+| Role  | Numeric Value | Permissions                                                    |
+| :---- | :------------ | :------------------------------------------------------------- |
+| User  | 0             | Read-Only access to all tasks (GET /tasks).                    |
+| Admin | 1             | Full CRUD access to all tasks, plus user management functions. |
+
+### 2.2. Obtaining and Using the JWT
+
+1. Login: Send a POST request to /api/v1/user/login.
+
+2. Token Retrieval: The successful response will contain a long string, the JWT.
+
+3. Usage: For all protected endpoints (listed below), include the JWT in the Authorization Header of your request.
+   | Header | Format | Example |
+   | :--- | :--- | :--- |
+   | Authorization | Bearer <JWT_TOKEN> | Bearer eyJhbGciOiJIUzI1NiIsInR5c... |
+
+### 2.3. Common Error Responses
+
+| Status Code | Description  | Meaning                                                                                                                    |
+| :---------- | :----------- | :------------------------------------------------------------------------------------------------------------------------- |
+| 401         | Unauthorized | Authentication failure (e.g., Missing token, expired token, wrong password). You are not logged in.                        |
+| 403         | Forbidden    | Authorization failure (e.g., A User role trying to access an Admin-only endpoint). You are logged in, but lack permission. |
+
+## 3. Data Models🏗️
+
+### 3.1. User Object (Registration/Login)
+
+| Field     | Type   | Description                    |
+| :-------- | :----- | :----------------------------- |
+| id        | string | Unique identifier (UUID).      |
+| user_name | string | Unique username.               |
+| role      | int    | User's role (0=User, 1=Admin). |
+
+### 3.2. Task Object
 
 The primary resource object handled by the API has the following structure. Note that the **public `ID` field** is a custom identifier used for all API operations, separate from MongoDB's internal `_id`.
 
@@ -39,9 +74,87 @@ The primary resource object handled by the API has the following structure. Note
 }
 ```
 
-## 4. Endpoints
+## 4. User Endpoints 👤
 
-### 4.1. Get All Tasks
+All paths are relative to /api/v1/user.
+
+### 4.1. Register User
+
+Creates a new user account. The very first user registered is automatically assigned the Admin role. Subsequent users are assigned the User role.
+
+| Method | Path           | Access |
+| :----- | :------------- | :----- |
+| POST   | /user/register | Public |
+
+Request Body:
+
+```json
+{
+  "user_name": "new_user_name",
+  "password": "strongpassword123"
+}
+```
+
+Success Response (201 Created):
+
+```json
+{
+  "message": "user created successfully"
+}
+```
+
+### 4.2. Authenticate User (Login)
+
+Authenticates the user and returns a JWT token.
+
+| Method | Path        | Access |
+| :----- | :---------- | :----- |
+| POST   | /user/login | Public |
+
+Request Body:
+
+```json
+{
+  "user_name": "admin_user",
+  "password": "strongpassword123"
+}
+```
+
+Success Response (200 OK):
+
+```json
+{
+  "message": "Login successfully",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDE5NzAwMDAsInJvbGUiOjF9..."
+}
+```
+
+### 4.3. Promote User Role
+
+Allows an Admin to promote any existing user to the Admin role.
+
+| Method | Path         | Access     |
+| :----- | :----------- | :--------- |
+| PATCH  | /:id/promote | Admin Only |
+
+Success Response (200 OK):
+
+```json
+{
+  "message": "user status updated successfully",
+  "updatedUser": {
+    "ID": "a65c92...",
+    "UserName": "promoted_user",
+    "Role": 1
+  }
+}
+```
+
+## 5. Task Endpoints📝
+
+All paths are relative to /api/v1/tasks.
+
+### 5.1. Get All Tasks
 
 Retrieves a list of all tasks.
 
@@ -66,7 +179,7 @@ Success Response (200 OK):
 }
 ```
 
-### 4.2. Create a New Task
+### 5.2. Create a New Task
 
 Creates a new task.
 
@@ -108,7 +221,7 @@ Error Response (400 Bad Request):
 }
 ```
 
-### 4.3. Get a Single Task
+### 5.3. Get a Single Task
 
 Retrieves a single task by its unique ID.
 
@@ -137,7 +250,7 @@ Error Response (404 Not Found):
 }
 ```
 
-### 4.4. Update a Task
+### 5.4. Update a Task
 
 Updates an existing task. Only the fields provided in the JSON body will be updated. All fields are optional.
 
@@ -178,7 +291,7 @@ Error Response (404 Not Found):
 }
 ```
 
-### 4.5. Delete a Task
+### 5.5. Delete a Task
 
 Deletes a task by its unique ID.
 

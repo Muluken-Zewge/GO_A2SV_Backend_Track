@@ -1,10 +1,10 @@
-package middleware
+package infrastructure
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
-	"taskmanager/models"
+	domain "taskmanager/Domain"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -53,7 +53,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		// set role and userID for subsequent handlers
-		ctx.Set("role", models.UserRole(roleFloat))
+		ctx.Set("role", domain.UserRole(roleFloat))
 		ctx.Set("user_id", claims["user_id"])
 
 		ctx.Next()
@@ -61,7 +61,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 }
 
-func AuthorizationMiddleware(requiredRole models.UserRole) gin.HandlerFunc {
+func AuthorizationMiddleware(requiredRole domain.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userRoleVal, exists := ctx.Get("role")
 		if !exists {
@@ -69,7 +69,7 @@ func AuthorizationMiddleware(requiredRole models.UserRole) gin.HandlerFunc {
 			return
 		}
 
-		userRole, ok := userRoleVal.(models.UserRole)
+		userRole, ok := userRoleVal.(domain.UserRole)
 		if !ok {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Invalid role format in context"})
 			return

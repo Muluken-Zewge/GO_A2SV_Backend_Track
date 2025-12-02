@@ -3,17 +3,18 @@ package router
 import (
 	"os"
 	"taskmanager/Delivery/controllers"
-	"taskmanager/data"
-	"taskmanager/middleware"
-	"taskmanager/models"
+	domain "taskmanager/Domain"
+	middleware "taskmanager/Infrastructure"
+	usecases "taskmanager/Usecases"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(ts *data.TaskService, us *data.UserService) *gin.Engine {
+func SetupRouter(tu usecases.TaskUsecase, uu usecases.UserUsecase) *gin.Engine {
+
 	// itialize task and user controller
-	taskController := controllers.NewTaskController(ts)
-	userController := controllers.NewUserController(us)
+	taskController := controllers.NewTaskController(tu)
+	userController := controllers.NewUserController(uu)
 
 	// intialize the router
 	router := gin.Default()
@@ -38,7 +39,7 @@ func SetupRouter(ts *data.TaskService, us *data.UserService) *gin.Engine {
 	adminTaskRoutes := taskRoutes.Group("/")
 
 	adminTaskRoutes.Use(middleware.AuthMiddleware(jwtSecret))
-	adminTaskRoutes.Use(middleware.AuthorizationMiddleware(models.RoleAdmin))
+	adminTaskRoutes.Use(middleware.AuthorizationMiddleware(domain.RoleAdmin))
 
 	adminTaskRoutes.POST("", taskController.CreatTask)
 	adminTaskRoutes.PUT("/:id", taskController.UpdateTask)
@@ -46,7 +47,7 @@ func SetupRouter(ts *data.TaskService, us *data.UserService) *gin.Engine {
 
 	userRoutes.POST("/register", userController.RegisterUser)
 	userRoutes.POST("/login", userController.AuthenticateUser)
-	userRoutes.PATCH("/:id/promote", middleware.AuthMiddleware(jwtSecret), middleware.AuthorizationMiddleware(models.RoleAdmin), userController.PromoteUser)
+	userRoutes.PATCH("/:id/promote", middleware.AuthMiddleware(jwtSecret), middleware.AuthorizationMiddleware(domain.RoleAdmin), userController.PromoteUser)
 
 	return router
 }

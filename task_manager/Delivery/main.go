@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 	"taskmanager/Delivery/router"
-	"taskmanager/data"
+	repositories "taskmanager/Repositories"
+	usecases "taskmanager/Usecases"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	// Load variables from .env file
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("./config/.env"); err != nil {
 		log.Println("Note: No .env file found, relying on system environment variables.")
 	}
 
@@ -49,7 +50,7 @@ func main() {
 
 	// set up a context for connection timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel() // cancel the context when the function returns
+	defer cancel()
 
 	// set client options
 	clientOptions := options.Client().ApplyURI(mongoURI)
@@ -77,13 +78,18 @@ func main() {
 
 	log.Println("Successfully connected to MongoDB Atlas.")
 
-	// intialize task service
-	taskService := data.NewTaskService(client, dbName, taskCollectionName)
+	// intialize mongo repositories
+	mongoTaskRepo := repositories.NewMongoTaskRepository(client, dbName, taskCollectionName)
 
-	// intialize user service
-	userService := data.NewUserService(client, dbName, userCollectionName)
+	mongoUserRepo := repositories.NewMongoUserRepository(client, dbName, userCollectionName)
 
-	r := router.SetupRouter(taskService, userService)
+	// intialize usecases
+	taskUsecase := usecases.NewTaskUsecase(mongoTaskRepo)
+
+	userUsecase := usecases.NewUserUsecase(mongoUserRepo)
+
+	// intialize the router
+	r := router.SetupRouter(taskUsecase, userUsecase)
 
 	log.Println("Server starting on port 8080...")
 

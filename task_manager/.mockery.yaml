@@ -1,0 +1,12 @@
+packages:
+  taskmanager/Repositories:
+    interfaces:
+      TaskRepository:
+        config:
+          dir: "./Tests/mocks"
+          filename: "mock_task_repository.go"
+
+      UserRepository:
+        config:
+          dir: ./Tests/mocks
+          filename: "mock_user_repository.go"

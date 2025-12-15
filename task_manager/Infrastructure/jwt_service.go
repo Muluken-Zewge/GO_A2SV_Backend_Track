@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	domain "taskmanager/Domain"
@@ -13,6 +14,11 @@ func GenerateJWT(userId string, userName string, role domain.UserRole) (string, 
 
 	// get jwt secret from env varaiable
 	jwtSecret := os.Getenv("JWT_SECRET")
+
+	// 2. VALIDATION: Check if the secret is missing or empty
+	if jwtSecret == "" {
+		return "", errors.New("JWT_SECRET environment variable is not set or empty")
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":   userId,

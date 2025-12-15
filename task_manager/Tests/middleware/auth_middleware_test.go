@@ -8,7 +8,7 @@ import (
 	"time"
 
 	domain "taskmanager/Domain"
-	infrastructure "taskmanager/Infrastructure" // The package being tested
+	infrastructure "taskmanager/Infrastructure"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"

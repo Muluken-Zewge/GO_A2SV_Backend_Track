@@ -10,3 +10,15 @@ packages:
         config:
           dir: ./Tests/mocks
           filename: "mock_user_repository.go"
+
+  taskmanager/Usecases:
+    interfaces:
+      TaskUsecase:
+        config:
+          dir: ./Tests/mocks
+          filename: "mock_task_usecase.go"
+
+      UserUsecase:
+        config:
+          dir: ./Tests/mocks
+          filename: "mock_user_usecase.go"

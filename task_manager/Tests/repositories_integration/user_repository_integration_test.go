@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,6 +26,11 @@ type UserRepoTestSuite struct {
 }
 
 func (suite *UserRepoTestSuite) SetupSuite() {
+
+	// Load variables from .env file
+	if err := godotenv.Load("../../config/.env"); err != nil {
+		log.Println("Note: No .env file found, relying on system environment variables.")
+	}
 
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
@@ -181,9 +187,10 @@ func (suite *UserRepoTestSuite) TestSaveUser_success() {
 
 	// ASSERT: 2. check if the user is actually saved in the database
 	collection := suite.Client.Database(suite.DBName).Collection("users")
-	count, _ := collection.CountDocuments(context.Background(), bson.M{"user_name": userToSave.UserName})
+	count, err := collection.CountDocuments(context.Background(), bson.M{"user_name": userToSave.UserName})
 
-	suite.Assert().Equal(int64(count), 1, "One user should be found in the database")
+	suite.Require().NoError(err)
+	suite.Assert().Equal(int(count), 1, "One user should be found in the database")
 }
 
 func (suite *UserRepoTestSuite) TestDoesUserExist_Exist() {
@@ -199,7 +206,7 @@ func (suite *UserRepoTestSuite) TestDoesUserExist_Exist() {
 
 	// ASSERT
 	suite.Require().NoError(err)
-	suite.Assert().Equal(id, insertedUser.ID, "user id should match")
+	suite.Assert().Equal(id, insertedUser.ID.String(), "user id should match")
 	suite.Assert().Equal(role, insertedUser.Role, "user role should match")
 }
 

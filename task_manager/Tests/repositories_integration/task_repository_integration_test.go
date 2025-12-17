@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,6 +28,12 @@ type TaskRepoTestSuite struct {
 func (suite *TaskRepoTestSuite) SetupSuite() {
 
 	// intialization setup
+
+	// Load variables from .env file
+	if err := godotenv.Load("../../config/.env"); err != nil {
+		log.Println("Note: No .env file found, relying on system environment variables.")
+	}
+
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
 		log.Fatal("FATAL: MONGO_URI environment variable is not set. Cannot connect to database.")
@@ -269,7 +276,7 @@ func (suite *TaskRepoTestSuite) TestDelete_Success() {
 
 	err = collection.FindOne(context.Background(), bson.M{"task_id": intialTask.ID}).Decode(&dbCheckTask)
 
-	suite.Assert().True(errors.Is(err, domain.ErrNotFound), "Direct query should confirm the task was deleted")
+	suite.Assert().True(errors.Is(err, mongo.ErrNoDocuments), "Direct query should confirm the task was deleted")
 }
 
 func (suite *TaskRepoTestSuite) TestDelete_NotFound() {

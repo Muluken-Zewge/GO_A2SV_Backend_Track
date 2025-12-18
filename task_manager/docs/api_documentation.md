@@ -315,3 +315,119 @@ Error Response (404 Not Found):
   "error": "task not found"
 }
 ```
+
+## 🧪 Testing Guide
+
+This project uses a layered testing strategy to ensure reliability across the domain, usecases, and delivery layers. We use the **Testify** library for assertions and suites, and **Mockery** for dependency injection.
+
+---
+
+## 1. Prerequisites
+
+Before running tests, ensure you have the following installed:
+
+- **Go:** 1.21 or higher
+- **Mockery:** To regenerate mocks if you change interfaces
+
+Install Mockery using:
+
+```bash
+go install github.com/vektra/mockery/v2@latest
+```
+
+## 2. Test Setup & Organization
+
+Tests are co-located with the source code using the `_test.go` suffix.
+
+- **Unit Tests:**  
+  Located in `Usecases/` and `Infrastructure/`. These test business logic in isolation.
+
+- **Controller Tests:**  
+  Located in `Delivery/controllers/`. These test the logic of handling requests and mapping errors.
+
+- **Router / Integration Tests:**  
+  Located in `Delivery/router/`. These verify middleware, routing, and end-to-end HTTP flows.
+
+Environment Variables
+The router and middleware tests require a JWT_SECRET. This is handled automatically within the test suites using `os.Setenv("JWT_SECRET", "test_secret")`, so no manual .env setup is required for testing.
+
+## 3. Running Tests
+
+### Run all tests
+
+To run every test in the project:
+
+```bash
+go test ./...
+```
+
+Run tests with verbose output
+
+Useful for seeing individual test names and fmt.Printf output:
+
+```bash
+go test -v ./...
+```
+
+Check Test Coverage
+To see which lines of code are covered by tests:
+
+```bash
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+```
+
+## 4. Mocking with Mockery
+
+We use mocks to isolate the layer we are testing. If you modify any Interface (e.g., in UserRepository or TaskUsecase), you must update the mocks:
+
+```bash
+mockery --all
+```
+
+This will update all files in the `mocks/` directory based on your current interfaces.
+
+## 5. Understanding Test Output
+
+✅ Successful Test
+When a test passes, you will see a simple `PASS` notification:
+
+```plaintext
+=== RUN   TestTaskController_GetTasks_Success
+--- PASS: TestTaskController_GetTasks_Success (0.00s)
+PASS
+ok      taskmanager/Delivery/controllers  0.123s
+
+❌ Failed Test
+When a test fails, Testify provides a "Diff" showing what was expected vs. what was actually received:
+```
+
+```plaintext
+=== RUN   TestAuthMiddleware_Fail_NoHeader
+    middleware_test.go:85:
+        Error Trace:    middleware_test.go:85
+        Error:          Not equal:
+                        expected: 401
+                        actual:   200
+        Test:           TestAuthMiddleware_Fail_NoHeader
+--- FAIL: TestAuthMiddleware_Fail_NoHeader (0.00s)
+FAIL
+```
+
+How to read this:
+
+Error Trace: The exact file and line number where the failure occurred.
+
+Expected vs Actual: Shows that the middleware was expected to return 401 Unauthorized but returned 200 OK instead (meaning the middleware failed to abort the request).
+
+## 6. Adding New Tests
+
+When adding new features:
+
+Define the Interface in the Domain layer.
+
+Run `mockery --all` to generate the new mock.
+
+Create a `_test.go` file in the relevant directory.
+
+Use `httptest.NewRecorder()` for any logic involving Gin controllers or middleware.

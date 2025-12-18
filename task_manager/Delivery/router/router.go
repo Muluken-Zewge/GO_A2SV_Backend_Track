@@ -36,7 +36,7 @@ func SetupRouter(tu usecases.TaskUsecase, uu usecases.UserUsecase) *gin.Engine {
 	taskRoutes.GET("/:id", middleware.AuthMiddleware(jwtSecret), taskController.GetTaskById)
 
 	// admin-only routes
-	adminTaskRoutes := taskRoutes.Group("/")
+	adminTaskRoutes := taskRoutes.Group("")
 
 	adminTaskRoutes.Use(middleware.AuthMiddleware(jwtSecret))
 	adminTaskRoutes.Use(middleware.AuthorizationMiddleware(domain.RoleAdmin))

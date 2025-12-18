@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -94,7 +94,7 @@ func TestTaskController_CreatTask_Fail_Validation(t *testing.T) {
 	// Mock Usecase returning a validation error
 	mockUsecase.EXPECT().
 		CreateTask(mock.Anything, validTask).
-		Return(domain.Task{}, errors.New("error:title, description and status are required"))
+		Return(domain.Task{}, fmt.Errorf("%w: title, description and status are required", domain.ErrValidation))
 
 	controller.CreatTask(c)
 
@@ -135,15 +135,14 @@ func TestUserController_RegisterUser_Fail_AlreadyExists(t *testing.T) {
 	c, w := setupTestContext(http.MethodPost, "/user/register", credentials, nil)
 
 	// Mock Usecase returning a wrapped ErrAleadyExists
-	userExistError := errors.New("username already exists")
-	mockUsecase.EXPECT().RegisterUser(mock.Anything, "taken", "p").Return(domain.User{}, userExistError)
+	mockUsecase.EXPECT().RegisterUser(mock.Anything, "taken", "p").Return(domain.User{}, domain.ErrAleadyExists)
 
 	controller.RegisterUser(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var response map[string]string
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, userExistError.Error(), response["error"])
+	assert.Equal(t, domain.ErrAleadyExists.Error(), response["error"])
 
 	mockUsecase.AssertExpectations(t)
 }

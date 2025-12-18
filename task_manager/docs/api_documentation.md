@@ -397,10 +397,10 @@ When a test passes, you will see a simple `PASS` notification:
 --- PASS: TestTaskController_GetTasks_Success (0.00s)
 PASS
 ok      taskmanager/Delivery/controllers  0.123s
+```
 
 ❌ Failed Test
 When a test fails, Testify provides a "Diff" showing what was expected vs. what was actually received:
-```
 
 ```plaintext
 === RUN   TestAuthMiddleware_Fail_NoHeader
@@ -416,9 +416,9 @@ FAIL
 
 How to read this:
 
-Error Trace: The exact file and line number where the failure occurred.
+1. Error Trace: The exact file and line number where the failure occurred.
 
-Expected vs Actual: Shows that the middleware was expected to return 401 Unauthorized but returned 200 OK instead (meaning the middleware failed to abort the request).
+2. Expected vs Actual: Shows that the middleware was expected to return 401 Unauthorized but returned 200 OK instead (meaning the middleware failed to abort the request).
 
 ## 6. Adding New Tests
 
